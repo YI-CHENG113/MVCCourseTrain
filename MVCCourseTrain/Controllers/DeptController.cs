@@ -9,14 +9,15 @@ using MVCCourseTrain.ViewModels;
 using System.Diagnostics;
 using Omu.ValueInjecter;
 using System;
-
-
+using MVCCourseTrain.ActionFilters;
+using System.Data.Entity.Validation;
 
 namespace MVCCourseTrain.Controllers
 {
-    public class DeptController : Controller
+    public class DeptController : BaseController
     {
         ContosoUniversityEntities db = new ContosoUniversityEntities();
+        DepartmentRepository repo = RepositoryHelper.GetDepartmentRepository();
         public DeptController()
         {
             db.Database.Log = (msg) => Debug.WriteLine(msg);
@@ -24,6 +25,32 @@ namespace MVCCourseTrain.Controllers
         // GET: Dept
         public ActionResult Index()
         {
+            return View(db.Department.Include(d => d.Manager));
+        }
+        public ActionResult BatchEdit()
+        {
+            return View(db.Department.Include(d => d.Manager));
+        }
+
+        [HttpPost]
+        [HandleError(ExceptionType = typeof(DbEntityValidationException), View = "ErrorDbEntityValidationException")]
+
+        public ActionResult BatchEdit(BatchEditViewModel[] data)
+        {
+            if (ModelState.IsValid)
+            {
+                foreach (var item in data)
+                {
+                    var one = repo.FindOne(item.DepartmentID);
+                    one.InjectFrom(item);
+                }
+
+
+                repo.UnitOfWork.Commit();
+
+                return RedirectToAction("Index");
+            }
+
             return View(db.Department.Include(d => d.Manager));
         }
         public ActionResult Details(int id)
@@ -36,12 +63,15 @@ namespace MVCCourseTrain.Controllers
             return View(department);
         }
 
+        [產生ViewBag點InstructorID並設定SelectList給View]
         public ActionResult Create()
         {
             return View();
         }
 
         [HttpPost]
+        [產生ViewBag點InstructorID並設定SelectList給View]
+        [HandleError(ExceptionType = typeof(DbEntityValidationException), View = "ErrorDbEntityValidationException")]
         public ActionResult Create(DepartmentCreate department)
         {
             if (ModelState.IsValid)
@@ -51,25 +81,37 @@ namespace MVCCourseTrain.Controllers
                 dept.StartDate = DateTime.Now;
 
                 db.Department.Add(dept);
+      
                 db.SaveChanges();
 
                 return RedirectToAction("Index");
             }
 
+
+
             return View(department);
         }
-
+        [產生ViewBag點InstructorID並設定SelectList給View]
         public ActionResult Edit(int id)
         {
-            Department department = db.Department.Find(id);
+            var department = (from p in db.Department
+                              where p.DepartmentID == id
+                              select new DepartmentEdit()
+                              {
+                                  Budget = p.Budget,
+                                  Name = p.Name,
+                                  InstructorID = p.InstructorID,
+                                  StartDate = p.StartDate
+                              }).FirstOrDefault();
             if (department == null)
             {
                 return HttpNotFound();
             }
-            return View(new DepartmentEdit().InjectFrom(department));
+            return View(department);
         }
 
         [HttpPost]
+        [產生ViewBag點InstructorID並設定SelectList給View]
         public ActionResult Edit(int id, DepartmentEdit department)
         {
             if (ModelState.IsValid)

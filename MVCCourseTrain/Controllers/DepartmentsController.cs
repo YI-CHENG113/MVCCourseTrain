@@ -11,7 +11,7 @@ using MVCCourseTrain.ViewModels;
 
 namespace MVCCourseTrain.Controllers
 {
-    public class DepartmentsController : Controller
+    public class DepartmentsController : BaseController
     {
         private ContosoUniversityEntities db = new ContosoUniversityEntities();
 

@@ -32,6 +32,7 @@ namespace MVCCourseTrain.Models
         public virtual DbSet<Enrollment> Enrollment { get; set; }
         public virtual DbSet<OfficeAssignment> OfficeAssignment { get; set; }
         public virtual DbSet<Person> Person { get; set; }
+        public virtual DbSet<TEST1> TEST1 { get; set; }
     
         public virtual int Department_Delete(Nullable<int> departmentID, byte[] rowVersion_Original)
         {

@@ -1,0 +1,24 @@
+﻿
+@{
+    ViewBag.Title = "Index";
+}
+
+<h2>Index</h2>
+
+@{ var data = new int[] { 1, 2, 3, 4, 5 }; }
+@for (int count = 0; count < data.Length; count++)
+{
+    @data[count]
+
+}
+<br>
+@for (int count = 0; count < data.Length; count++)
+{
+    @(data[count]+"  ")
+}
+<ul>
+@for (int count = 0; count < data.Length; count++)
+{
+  <li>@(data[count].ToString())</li>
+}
+</ul>

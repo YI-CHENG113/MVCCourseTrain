@@ -4,7 +4,7 @@
   <edmx:Runtime>
     <!-- SSDL content -->
     <edmx:StorageModels>
-      <Schema Namespace="ContosoUniversityModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
+    <Schema Namespace="ContosoUniversityModel.Store" Provider="System.Data.SqlClient" ProviderManifestToken="2012" Alias="Self" xmlns:store="http://schemas.microsoft.com/ado/2007/12/edm/EntityStoreSchemaGenerator" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm/ssdl">
         <EntityType Name="Course">
           <Key>
             <PropertyRef Name="CourseID" />
@@ -13,6 +13,7 @@
           <Property Name="Title" Type="nvarchar" MaxLength="50" />
           <Property Name="Credits" Type="int" Nullable="false" />
           <Property Name="DepartmentID" Type="int" Nullable="false" />
+          <Property Name="IsDelete" Type="bit" Nullable="false" />
         </EntityType>
         <EntityType Name="CourseInstructor">
           <Key>
@@ -59,6 +60,14 @@
           <Property Name="HireDate" Type="datetime" />
           <Property Name="EnrollmentDate" Type="datetime" />
           <Property Name="Discriminator" Type="nvarchar" MaxLength="128" Nullable="false" />
+        </EntityType>
+        <EntityType Name="TEST1">
+          <Key>
+            <PropertyRef Name="num" />
+          </Key>
+          <Property Name="num" Type="int" Nullable="false" />
+          <Property Name="Cname" Type="nvarchar" MaxLength="8" />
+          <Property Name="Ename" Type="varchar" MaxLength="20" />
         </EntityType>
         <Association Name="FK_dbo_Course_dbo_Department_DepartmentID">
           <End Role="Department" Type="Self.Department" Multiplicity="1">
@@ -179,6 +188,7 @@
           <EntitySet Name="Enrollment" EntityType="Self.Enrollment" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="OfficeAssignment" EntityType="Self.OfficeAssignment" Schema="dbo" store:Type="Tables" />
           <EntitySet Name="Person" EntityType="Self.Person" Schema="dbo" store:Type="Tables" />
+          <EntitySet Name="TEST1" EntityType="Self.TEST1" Schema="dbo" store:Type="Tables" />
           <AssociationSet Name="FK_dbo_Course_dbo_Department_DepartmentID" Association="Self.FK_dbo_Course_dbo_Department_DepartmentID">
             <End Role="Department" EntitySet="Department" />
             <End Role="Course" EntitySet="Course" />
@@ -208,8 +218,7 @@
             <End Role="OfficeAssignment" EntitySet="OfficeAssignment" />
           </AssociationSet>
         </EntityContainer>
-      </Schema>
-    </edmx:StorageModels>
+      </Schema></edmx:StorageModels>
     <!-- CSDL content -->
     <edmx:ConceptualModels>
       <Schema Namespace="ContosoUniversityModel" Alias="Self" annotation:UseStrongSpatialTypes="false" xmlns:annotation="http://schemas.microsoft.com/ado/2009/02/edm/annotation" xmlns:customannotation="http://schemas.microsoft.com/ado/2013/11/edm/customannotation" xmlns="http://schemas.microsoft.com/ado/2009/11/edm">
@@ -224,6 +233,7 @@
           <NavigationProperty Name="Department" Relationship="Self.FK_dbo_Course_dbo_Department_DepartmentID" FromRole="Course" ToRole="Department" />
           <NavigationProperty Name="Enrollment" Relationship="Self.FK_dbo_Enrollment_dbo_Course_CourseID" FromRole="Course" ToRole="Enrollment" />
           <NavigationProperty Name="Person" Relationship="Self.CourseInstructor" FromRole="Course" ToRole="Person" />
+          <Property Name="IsDelete" Type="Boolean" Nullable="false" />
         </EntityType>
         <EntityType Name="Department">
           <Key>
@@ -390,11 +400,20 @@
             <Parameter Name="InstructorID" Mode="In" Type="Int32" />
             <Parameter Name="RowVersion_Original" Mode="In" Type="Binary" />
           </FunctionImport>
+          <EntitySet Name="TEST1" EntityType="ContosoUniversityModel.TEST1" />
         </EntityContainer>
         <ComplexType Name="Department_Insert_Result">
           <Property Type="Int32" Name="DepartmentID" Nullable="false" />
           <Property Type="Binary" Name="RowVersion" Nullable="false" MaxLength="8" />
         </ComplexType>
+        <EntityType Name="TEST1">
+          <Key>
+            <PropertyRef Name="num" />
+          </Key>
+          <Property Name="num" Type="Int32" Nullable="false" />
+          <Property Name="Cname" Type="String" MaxLength="8" FixedLength="false" Unicode="true" />
+          <Property Name="Ename" Type="String" MaxLength="20" FixedLength="false" Unicode="false" />
+        </EntityType>
       </Schema>
     </edmx:ConceptualModels>
     <!-- C-S mapping content -->
@@ -404,6 +423,7 @@
           <EntitySetMapping Name="Course">
             <EntityTypeMapping TypeName="ContosoUniversityModel.Course">
               <MappingFragment StoreEntitySet="Course">
+                <ScalarProperty Name="IsDelete" ColumnName="IsDelete" />
                 <ScalarProperty Name="CourseID" ColumnName="CourseID" />
                 <ScalarProperty Name="Title" ColumnName="Title" />
                 <ScalarProperty Name="Credits" ColumnName="Credits" />
@@ -421,6 +441,28 @@
                 <ScalarProperty Name="InstructorID" ColumnName="InstructorID" />
                 <ScalarProperty Name="RowVersion" ColumnName="RowVersion" />
               </MappingFragment>
+            </EntityTypeMapping>
+            <EntityTypeMapping TypeName="ContosoUniversityModel.Department">
+              <ModificationFunctionMapping>
+                <UpdateFunction FunctionName="ContosoUniversityModel.Store.Department_Update">
+                  <ScalarProperty Name="RowVersion" ParameterName="RowVersion_Original" Version="Current" />
+                  <ScalarProperty Name="InstructorID" ParameterName="InstructorID" Version="Current" />
+                  <ScalarProperty Name="StartDate" ParameterName="StartDate" Version="Current" />
+                  <ScalarProperty Name="Budget" ParameterName="Budget" Version="Current" />
+                  <ScalarProperty Name="Name" ParameterName="Name" Version="Current" />
+                  <ScalarProperty Name="DepartmentID" ParameterName="DepartmentID" Version="Current" />
+                </UpdateFunction>
+                <InsertFunction FunctionName="ContosoUniversityModel.Store.Department_Insert">
+                  <ScalarProperty Name="InstructorID" ParameterName="InstructorID" />
+                  <ScalarProperty Name="StartDate" ParameterName="StartDate" />
+                  <ScalarProperty Name="Budget" ParameterName="Budget" />
+                  <ScalarProperty Name="Name" ParameterName="Name" />
+                </InsertFunction>
+                <DeleteFunction FunctionName="ContosoUniversityModel.Store.Department_Delete">
+                  <ScalarProperty Name="RowVersion" ParameterName="RowVersion_Original" />
+                  <ScalarProperty Name="DepartmentID" ParameterName="DepartmentID" />
+                </DeleteFunction>
+              </ModificationFunctionMapping>
             </EntityTypeMapping>
           </EntitySetMapping>
           <EntitySetMapping Name="Enrollment">
@@ -471,6 +513,15 @@
             </ResultMapping>
           </FunctionImportMapping>
           <FunctionImportMapping FunctionImportName="Department_Update" FunctionName="ContosoUniversityModel.Store.Department_Update" />
+          <EntitySetMapping Name="TEST1">
+            <EntityTypeMapping TypeName="ContosoUniversityModel.TEST1">
+              <MappingFragment StoreEntitySet="TEST1">
+                <ScalarProperty Name="Ename" ColumnName="Ename" />
+                <ScalarProperty Name="Cname" ColumnName="Cname" />
+                <ScalarProperty Name="num" ColumnName="num" />
+              </MappingFragment>
+            </EntityTypeMapping>
+          </EntitySetMapping>
         </EntityContainerMapping>
       </Mapping>
     </edmx:Mappings>
